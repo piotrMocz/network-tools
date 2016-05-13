@@ -1,28 +1,25 @@
 import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 import random
+from time import time
+from string import strip
+from config import Config
 
-
-# network configuration:
-node_cnt = 10000
-focal_points = [1, 8, 16, 32, 50, 64, 700, 800, 4311, 7123, 9900]  # np.random.choice(node_cnt, 5)
-min_1_order_neighbours = 10
-max_1_order_neighbours = 40
-min_2_order_neighbours = 4
-max_2_order_neighbours = 14
-cluster_count = 5
-min_intercluster_conns = 10
-max_intercluster_conns = 20
+FOCAL_POINTS = [1, 8, 16, 32, 50, 64, 700, 800, 4311, 7123, 9900]  # np.random.choice(node_cnt, 5)
+config = Config(FOCAL_POINTS)
 
 
 def neighbours_1_cnt():
-    global min_1_order_neighbours, max_1_order_neighbours
-    return random.randrange(min_1_order_neighbours, max_1_order_neighbours)
+    global config
+    return random.randrange(config.min_1_order_neighbours,
+                            config.max_1_order_neighbours)
 
 
 def neighbours_2_cnt():
-    global min_2_order_neighbours, max_2_order_neighbours
-    return random.randrange(min_2_order_neighbours, max_2_order_neighbours)
+    global config
+    return random.randrange(config.min_2_order_neighbours,
+                            config.max_2_order_neighbours)
 
 
 def make_random_2tree(G):
@@ -56,15 +53,22 @@ def random_neighbour(G, root):
 
 
 def random_net():
-    global cluster_count, min_intercluster_conns, max_intercluster_conns
+    """
+    Creates a networkx graph representing a social network graph.
+    :return: networkx Graph object
+    """
+    print "Creating a random network..."
+    t_start = time()
+    global config
 
     G = nx.Graph()
 
     # generate a forest of trees of order 2:
-    roots = [make_random_2tree(G) for i in xrange(cluster_count)]
+    roots = [make_random_2tree(G) for i in xrange(config.cluster_count)]
 
     # randomly connect the trees:
-    ic_conns_cnt = random.randrange(min_intercluster_conns, max_intercluster_conns)
+    ic_conns_cnt = random.randrange(config.min_intercluster_conns,
+                                    config.max_intercluster_conns)
     for i in xrange(ic_conns_cnt):
         c1, c2 = random.sample(roots, 2)
         n1 = random_neighbour(G, c1)
@@ -72,41 +76,111 @@ def random_net():
 
         G.add_edge(n1, n2)
 
+    t_elapsed = time() - t_start
+    print "Finished! Time elapsed: {0}".format(t_elapsed)
     return G
 
 
+def import_graph(fname):
+    """
+    Imports graph from a file.
+    :param fname: File to read the graph from.
+    :return: networkx Graph object
+    """
+    with open(fname, 'r') as f:
+        G = nx.Graph()
+
+        V = int(strip(f.readline()))
+
+        for i in xrange(V):
+            line = strip(f.readline())
+            v1, v2 = map(int, line.split(' '))
+            G.add_edge(v1, v2)
+
+        return G
+
+
 def export_graph(G, fname):
+    """
+    Exports a networkx Graph to file.
+    Format:
+    number_of_vertices
+    [subsequent edges]
+    :param G: networkx Graph
+    :param fname: File to dump the graph to
+    :return: void
+    """
     with open(fname, 'w') as f:
         f.write(str(G.number_of_nodes()) + '\n')
         for e in G.edges():
             f.write(str(e[0]) + ' ' + str(e[1]) + '\n')
 
 
-nodes = range(node_cnt)
+def graph_histogram(G, bins=None):
+    print "Plotting friend count histogram..."
+    t_start = time()
 
-G = nx.Graph()
-G.add_nodes_from(nodes)
+    V = len(G.nodes())
+    ys = np.zeros(V)
+    bin_cnt = V / 10 if bins is None else bins
 
-print G.nodes()
-print focal_points
-# print G.edges()
+    for idx, v in enumerate(G.nodes()):
+        ys[idx] = len(G.neighbors(v))
 
-for fp in focal_points:
-    # select a random number of neighbours for the focal point:
-    num_neighbours = random.randrange(10, 150)
-    neighbours = [random.choice(nodes) for i in xrange(num_neighbours)]
-    for n in neighbours:
-        G.add_edge(fp, n)
+    # ys = filter(lambda x: x > 0, ys)
+    # ys = np.log10(ys)
+    # ys = filter(lambda x: x > 0, ys)
+    # ys = np.log10(ys)
 
-for node in nodes:
-    # select a random number of neighbours for the focal point:
-    num_neighbours = random.randrange(2, 3)
-    neighbours = [random.choice(nodes) for i in xrange(num_neighbours)]
-    for n in neighbours:
-        G.add_edge(node, n)
+    plt.hist(ys, bins=bin_cnt)
+    plt.ylabel('Number of users with given friend count')
+    plt.title('Histogram of frienship counts per user')
+    plt.plot()
+    plt.savefig('friend-histogram.png')
+    plt.close()
 
-# pos = nx.spectral_layout(G)
-nx.draw(G)
-# nx.draw_networkx_nodes(G, pos, nodelist=focal_points, node_size=800)
-plt.show()
-export_graph(G, 'graf.txt')
+    t_elapsed = time() - t_start
+    print "Finished! Time elapsed: {0}".format(t_elapsed)
+
+
+def generate_graph(plot_graph=False, plot_histogram=False):
+    global config
+    nodes = range(config.node_cnt)
+
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+
+    # print G.nodes()
+    print config.focal_points
+    # print G.edges()
+
+    for fp in config.focal_points:
+        # select a random number of neighbours for the focal point:
+        num_neighbours = random.randrange(10, 150)
+        neighbours = [random.choice(nodes) for i in xrange(num_neighbours)]
+        for n in neighbours:
+            G.add_edge(fp, n)
+
+    for node in nodes:
+        # select a random number of neighbours for the focal point:
+        num_neighbours = random.randrange(2, 3)
+        neighbours = [random.choice(nodes) for i in xrange(num_neighbours)]
+        for n in neighbours:
+            G.add_edge(node, n)
+
+    # pos = nx.spectral_layout(G)
+    if plot_graph:
+        nx.draw(G)
+        # nx.draw_networkx_nodes(G, pos, nodelist=focal_points, node_size=800)
+        plt.show()
+
+    if plot_histogram:
+        graph_histogram(G, bins=len(G.nodes()))
+
+    export_graph(G, 'graf.txt')
+
+
+if __name__ == '__main__':
+    generate_graph()
+    G = import_graph('graf.txt')
+    graph_histogram(G)
