@@ -12,18 +12,15 @@ def parse_line(line):
     r = 1 if msg_type == 'R' else 0
     s = 1 if msg_type == 'S' else 0
     cc = 1 if msg_type == 'CC' else 0
-    f = 1 if msg_type == 'F' else 0
     return timestamp, {
         #  'uid': [usr_id],
-        'R': r, 'S': s, 'CC': cc, 'F': f}
+        'R': r, 'S': s, 'CC': cc}
 
 
 def combine_infos(info1, info2):
-    return {  # 'uid': info1['uid'] + info2['uid'],
-            'R': info1['R'] + info2['R'],
+    return {'R': info1['R'] + info2['R'],
             'S': info1['S'] + info2['S'],
-            'CC': info1['CC'] + info2['CC'],
-            'F': info1['F'] + info2['F']}
+            'CC': info1['CC'] + info2['CC']}
 
 
 def read_log(file_path):
@@ -69,26 +66,22 @@ def compute_logs(logs):
     rs = np.zeros(N)
     ss = np.zeros(N)
     ccs = np.zeros(N)
-    fs = np.zeros(N)
 
     idx = 0
     for info in logs.itervalues():
         rs[idx] = info['R']
         ss[idx] = info['S']
         ccs[idx] = info['CC']
-        fs[idx] = info['F']
 
         idx += 1
 
     rs_pref = np.cumsum(rs)
     ss_pref = np.cumsum(ss)
     ccs_pref = np.cumsum(ccs)
-    fs_pref = np.cumsum(fs)
 
     return {'R': (rs, rs_pref),
             'S': (ss, ss_pref),
-            'CC': (ccs, ccs_pref),
-            'F': (fs, fs_pref)}
+            'CC': (ccs, ccs_pref)}
 
 
 def dump_logs(logs, dump_file):
@@ -100,7 +93,7 @@ def dump_logs(logs, dump_file):
     print "Finished dumping the logs!"
 
 
-def process_logs(received=True, sent=True, created=True, friends=True, linear=True, cumulative=True):
+def process_logs(received=True, sent=True, created=True, linear=True, cumulative=True):
     logs = load_logs()
     results = compute_logs(logs)
     dump_logs(logs, "logs.txt")
@@ -108,12 +101,13 @@ def process_logs(received=True, sent=True, created=True, friends=True, linear=Tr
     rs, rs_pref = results['R']
     ss, ss_pref = results['S']
     ccs, ccs_pref = results['CC']
-    fs, fs_pref = results['F']
 
     xs = np.arange(len(logs))
 
     if linear:
         print "Plotting linear..."
+        plt.figure(figsize=(10, 8), dpi=120)
+        plt.subplot(1, 1, 1)
 
         if received:
             plt.plot(xs, rs, 'b^-', label='Received')
@@ -121,8 +115,7 @@ def process_logs(received=True, sent=True, created=True, friends=True, linear=Tr
             plt.plot(xs, ss, 'gv-', label='Sent')
         if created:
             plt.plot(xs, ccs, 'ro-', label='Created')
-        if friends:
-            plt.plot(xs, fs, 'ys-', label='Friends')
+
         plt.legend(loc='best')
         plt.xlabel('Time')
         plt.ylabel('No of requests')
@@ -132,6 +125,8 @@ def process_logs(received=True, sent=True, created=True, friends=True, linear=Tr
 
     if cumulative:
         print "Plotting cumulative..."
+        plt.figure(figsize=(10, 8), dpi=120)
+        plt.subplot(1, 1, 1)
 
         if received:
             plt.plot(xs, rs_pref, 'b^-', label='Received')
@@ -139,8 +134,7 @@ def process_logs(received=True, sent=True, created=True, friends=True, linear=Tr
             plt.plot(xs, ss_pref, 'gv-', label='Sent')
         if created:
             plt.plot(xs, ccs_pref, 'ro-', label='Created')
-        if friends:
-            plt.plot(xs, fs_pref, 'ys-', label='Friends')
+
         plt.legend(loc='best')
         plt.xlabel('Time')
         plt.ylabel('No of requests')
@@ -152,4 +146,4 @@ def process_logs(received=True, sent=True, created=True, friends=True, linear=Tr
 
 if __name__ == '__main__':
     print "Processing..."
-    process_logs(friends=False)
+    process_logs()
