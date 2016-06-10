@@ -19,7 +19,7 @@
       <h2>
 <a id="opis-projektu" class="anchor" href="#opis-projektu" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Opis projektu</h2>
 
-<p>Projekt ma na celu symulowanie ruchu w sieciach społecznościowych, takich jak Facebook czy Google+. Docelowo taką symulację można wykorzystać w celu uczenia algorytmów służących do przewidywania ruchu na maszynach w chmurze lub do stress-testów aplikacji i serwisów webowych. Założeniem projektu jest symulacja przy użyciu aktorowego modelu współbieżności: dzięki temu aplikacja dobrze się skaluje, a za pomocą pojedynczego aktora można zasymulować pojedynczego użytkownika.</p>
+<p>Projekt ma na celu symulowanie ruchu w sieciach społecznościowych, takich jak Twitter, Facebook czy Google+. Docelowo taką symulację można wykorzystać w celu uczenia algorytmów służących do przewidywania ruchu na maszynach w chmurze lub do stress-testów aplikacji i serwisów webowych. Założeniem projektu jest symulacja przy użyciu aktorowego modelu współbieżności: dzięki temu aplikacja dobrze się skaluje, a za pomocą pojedynczego aktora można zasymulować pojedynczego użytkownika.</p>
 
 <h2>
 <a id="struktura-projektu" class="anchor" href="#struktura-projektu" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Struktura projektu</h2>
@@ -31,7 +31,7 @@
 
 <p>Napisany w języku Elixir, bazującym na maszynie wirtualnej Erlanga. Dodatkowo, projekt używa systemu budowania Mix (dedykowanego dla Elixira), pozwalającego na łatwą kompilację i uruchamianie projektu, oraz frameworku OTP, znacznie ułatwiającego budowanie rozproszonych aplikacji.</p>
 
-<p>Działanie symulatora jest następujące: wczytywany jest graf, którego wierzchołki to członkowie sieci społecznościowej, a krawędzie -- znajomości. Następnie, uruchamiany jest jeden obiekt <code>GenServer</code> per wierzchołek grafu i tworzona jest sieć znajomości (każdy aktor ma listę swoich znajomych). Budowanie sieci odbywa się asynchronicznie, za pomocą przesyłanych wiadomości. Każdy użytkownik ma oprócz tego przypięty proces loggera (zaimplementowany za pomocą mechanizmu <code>GenEvent</code> z OTP), który zbiera od niego wszystkie zdarzenia (również asynchronicznie).</p>
+<p>Działanie symulatora jest następujące: wczytywany jest graf, którego wierzchołki to członkowie sieci społecznościowej, a krawędzie -- znajomości. Następnie, uruchamiany jest jeden proces <code>GenServer</code> per wierzchołek grafu i tworzona jest sieć znajomości (każdy aktor ma listę swoich znajomych). Budowanie sieci odbywa się asynchronicznie, za pomocą przesyłanych wiadomości. Każdy użytkownik ma oprócz tego przypięty proces loggera (zaimplementowany za pomocą mechanizmu <code>GenEvent</code> z OTP), który zbiera od niego wszystkie zdarzenia (również asynchronicznie).</p>
 
 <p>Aplikacja bardzo dobrze się rozprasza, obrazek poniżej pokazuje użycie procesorów dla testowego uruchomienia z dużym obciążeniem.
 <img src="https://raw.githubusercontent.com/piotrMocz/network-tools/master/proc-stats.jpg" alt="Processor statistics"></p>
